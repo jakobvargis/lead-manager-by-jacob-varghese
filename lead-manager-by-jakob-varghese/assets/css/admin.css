@@ -1,0 +1,9 @@
+#lm_widget ul { 
+  list-style: none; 
+  padding-left: 0; 
+}
+#lm_widget li { 
+  margin-bottom: 6px; 
+  border-bottom: 1px solid #ddd; 
+  padding-bottom: 4px; 
+}

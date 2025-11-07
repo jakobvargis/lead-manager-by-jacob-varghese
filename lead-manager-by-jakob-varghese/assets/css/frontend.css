@@ -1,0 +1,5 @@
+.lm-lead-form input, .lm-lead-form button, .lm-lead-form textarea, .lm-lead-form select{
+  width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #e0e0e0;font-size:15px;
+}
+.lm-lead-form button{background:#0073aa;color:#fff;border:none;padding:10px 14px;border-radius:6px;cursor:pointer;}
+.lm-lead-form #lm-result{margin-top:8px;}

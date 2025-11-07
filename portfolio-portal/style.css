@@ -1,0 +1,70 @@
+/*
+Theme Name: Portfolio Portal
+Theme URI: https://example.com/portfolio-portal
+Author: Jacob Varghese
+Author URI: https://linkedin.com/in/jakobvargis
+Description: A minimal custom WordPress theme for Client Portal & Lead Manager demo.
+Version: 1.0
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: portfolio-portal
+*/
+body{
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  margin:0;
+  color:#111;
+  background:#f7f8fb;
+}
+.container{max-width:1000px;margin:32px auto;padding:0 16px;}
+header.site-header{background:#fff;padding:18px 0;border-bottom:1px solid #e6e6e6;}
+.site-title{font-size:20px;margin:0;}
+.nav{margin-top:8px;}
+.lead-form{background:#fff;padding:20px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.lead-form input, .lead-form button, .lead-form textarea, .lead-form select{
+  width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:6px;font-size:15px;
+}
+.lead-list{background:#fff;padding:16px;border-radius:8px;margin-top:16px;}
+.pp-testimonials{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px;}
+.pp-testimonial{background:#fff;padding:14px;border-radius:8px;}
+footer.site-footer{padding:24px 0;text-align:center;color:#666;}
+
+.client-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+@media (max-width:600px) {
+  .client-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.client-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.pagination a,
+.pagination span {
+  display:inline-block;
+  margin:0 4px;
+  padding:6px 12px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  text-decoration:none;
+}
+.pagination .current {
+  background:#0073aa;
+  color:#fff;
+  border-color:#0073aa;
+}
+
+.client-detail button:hover {
+  background:#005177;
+}
+
+.lead-admin table tr:hover {
+  background: #f9f9f9;
+}
+.lead-admin button:hover {
+  background: #005177;
+}
+
