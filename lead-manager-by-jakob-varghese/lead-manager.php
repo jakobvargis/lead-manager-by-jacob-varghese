@@ -1,23 +1,32 @@
 <?php
 /*
-Plugin Name: Lead Manager
-Description: Simple lead capture plugin with AJAX shortcode, REST endpoint, dashboard widget, and Lead→Client conversion.
-Version: 1.1
-Author: Jakob Varghese
+Plugin Name: Lead Manager by Jakob Varghese
+Plugin URI: https://profiles.wordpress.org/jakobvarghese/
+Description: A professional yet simple lead management plugin with AJAX form, REST API, dashboard widget, and frontend CRUD integration. Built for agencies, small businesses, and developers.
+Version: 1.0.0
+Author: Jacob Varghese
+Author URI: https://profiles.wordpress.org/jakobvarghese/
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: lead-manager
+Domain Path: /languages
 */
 
+define('LEAD_MANAGER_VERSION', '1.0.0');
+
 if (!defined('ABSPATH')) exit;
+
 
 // ==================================================
 // FRONTEND ASSETS
 // ==================================================
 add_action('wp_enqueue_scripts', function(){
-    wp_enqueue_script('lm-frontend', plugin_dir_url(__FILE__).'assets/js/lead-form.js', ['jquery'], null, true);
+    wp_enqueue_script('lm-frontend', plugin_dir_url(__FILE__).'assets/js/lead-form.js', ['jquery'], LEAD_MANAGER_VERSION, true);
     wp_localize_script('lm-frontend', 'lm_vars', [
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce'    => wp_create_nonce('lm_nonce')
     ]);
-    wp_enqueue_style('lm-css', plugin_dir_url(__FILE__).'assets/css/frontend.css');
+    wp_enqueue_style('lm-css', plugin_dir_url(__FILE__).'assets/css/frontend.css', array(), LEAD_MANAGER_VERSION);
 });
 
 // ==================================================
@@ -75,9 +84,10 @@ add_action('wp_ajax_lm_submit_lead','lm_submit_lead');
 function lm_submit_lead(){
     check_ajax_referer('lm_nonce','security');
 
-    $name  = sanitize_text_field($_POST['name'] ?? '');
-    $email = sanitize_email($_POST['email'] ?? '');
-    $phone = sanitize_text_field($_POST['phone'] ?? '');
+    $name  = isset($_POST['name'])  ? sanitize_text_field( wp_unslash($_POST['name']) )  : '';
+    $email = isset($_POST['email']) ? sanitize_email( wp_unslash($_POST['email']) )      : '';
+    $phone = isset($_POST['phone']) ? sanitize_text_field( wp_unslash($_POST['phone']) ) : '';
+
 
     if (empty($email) && empty($phone)) {
         wp_send_json_error('Please provide an email or phone.');
@@ -125,7 +135,7 @@ function lm_widget_display(){
 // ADMIN STYLES
 // ==================================================
 add_action('admin_enqueue_scripts', function(){
-    wp_enqueue_style('lm-admin-css', plugin_dir_url(__FILE__).'assets/css/admin.css');
+    wp_enqueue_style('lm-admin-css', plugin_dir_url(__FILE__).'assets/css/admin.css', array(), LEAD_MANAGER_VERSION);
 });
 
 // ==================================================
@@ -183,7 +193,9 @@ function lm_handle_convert_lead() {
     }
 
     // Nonce verification
-    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'lm_convert_lead_'.$lead_id)) {
+    $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field( wp_unslash($_GET['_wpnonce']) ) : '';
+    if ( ! $nonce || ! wp_verify_nonce($nonce, 'lm_convert_lead_' . $lead_id) ) {
+
         wp_die('Security check failed.');
     }
 
@@ -191,10 +203,20 @@ function lm_handle_convert_lead() {
     if (!$lead || $lead->post_type !== 'lead') wp_die('Invalid lead.');
 
     // Prevent duplicate conversion
-    if (get_post_meta($lead_id, '_pp_converted', true)) {
-        wp_safe_redirect(admin_url('edit.php?post_type=lead&lm_converted=dup'));
+    if ( get_post_meta( $lead_id, '_pp_converted', true ) ) {
+        $nonce = wp_create_nonce( 'lm_converted_notice' );
+        $redirect_url = add_query_arg(
+            array(
+                'post_type'    => 'lead',
+                'lm_converted' => 'dup',
+                '_lm_nonce'    => $nonce,
+            ),
+            admin_url( 'edit.php' )
+        );
+        wp_safe_redirect( $redirect_url );
         exit;
     }
+
 
     // Create Client post
     $client_id = wp_insert_post([
@@ -221,23 +243,61 @@ function lm_handle_convert_lead() {
     update_post_meta($lead_id, '_pp_converted', $client_id);
 
     // Redirect back with notice
-    wp_safe_redirect(admin_url('edit.php?post_type=lead&lm_converted='.$client_id));
+    $nonce = wp_create_nonce( 'lm_converted_notice' );
+    $redirect_url = add_query_arg(
+        array(
+            'post_type'    => 'lead',
+            'lm_converted' => $client_id,
+            '_lm_nonce'    => $nonce,
+        ),
+        admin_url( 'edit.php' )
+    );
+    wp_safe_redirect( $redirect_url );
     exit;
+
 }
 
-// Admin notice after conversion
-add_action('admin_notices', function(){
-    if (empty($_GET['lm_converted'])) return;
-    $id = intval($_GET['lm_converted']);
-    if ($id === 'dup') {
+// Admin notice after conversion (final WordPress.org-compliant version)
+add_action('admin_notices', function() {
+
+    // 1️ Copy and sanitize all GET data at once
+    $get = filter_input_array(INPUT_GET, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    if ( empty($get) || ! isset($get['lm_converted']) ) {
+        return;
+    }
+
+    // 2️ Extract safe values
+    $converted_value = sanitize_text_field( wp_unslash( $get['lm_converted'] ) );
+    $nonce_value     = isset($get['_lm_nonce']) ? sanitize_text_field( wp_unslash( $get['_lm_nonce'] ) ) : '';
+
+    // 3️ Verify nonce (only show message if legitimate redirect)
+    if ( empty($nonce_value) || ! wp_verify_nonce( $nonce_value, 'lm_converted_notice' ) ) {
+        return;
+    }
+
+    // 4️ Handle duplicate conversions
+    if ( $converted_value === 'dup' ) {
         echo '<div class="notice notice-warning is-dismissible"><p>This lead was already converted.</p></div>';
         return;
     }
-    $link = get_edit_post_link($id);
-    if ($link) {
-        echo '<div class="notice notice-success is-dismissible"><p>Lead converted to Client successfully. <a href="'.esc_url($link).'">Edit client #'.esc_html($id).'</a></p></div>';
+
+    // 5 Ensure numeric ID
+    $id = intval( $converted_value );
+    if ( $id <= 0 ) {
+        return;
     }
+
+    // 6️ Fetch and display
+    $link = get_edit_post_link( $id );
+    if ( ! $link ) {
+        return;
+    }
+
+    echo '<div class="notice notice-success is-dismissible">';
+    echo '<p>Lead converted to Client successfully. <a href="' . esc_url( $link ) . '">Edit client #' . esc_html( $id ) . '</a></p>';
+    echo '</div>';
 });
+
 
 // ==================================================
 // ADMIN LIST COLUMNS FOR LEADS
@@ -287,3 +347,4 @@ add_filter('manage_edit-lead_sortable_columns', function($columns) {
     $columns['lm_status'] = 'lm_status';
     return $columns;
 });
+
