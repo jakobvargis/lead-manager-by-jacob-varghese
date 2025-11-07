@@ -1,14 +1,13 @@
 <?php
 /*
 Plugin Name: Lead Manager by Jakob Varghese
-Plugin URI: https://profiles.wordpress.org/jakobvarghese/
-Description: A professional yet simple lead management plugin with AJAX form, REST API, dashboard widget, and frontend CRUD integration. Built for agencies, small businesses, and developers.
-Version: 1.0.0
-Author: Jacob Varghese
+Author: Jakob Varghese
 Author URI: https://profiles.wordpress.org/jakobvarghese/
+Description: Simple lead capture plugin with AJAX shortcode, REST endpoint and dashboard widget.
+Version: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: lead-manager
+Text Domain: lead-manager-by-jakob-varghese
 Domain Path: /languages
 */
 
@@ -347,4 +346,3 @@ add_filter('manage_edit-lead_sortable_columns', function($columns) {
     $columns['lm_status'] = 'lm_status';
     return $columns;
 });
-
